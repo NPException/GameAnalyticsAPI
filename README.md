@@ -1,5 +1,5 @@
 # GameAnalyticsAPI
-An API to easily use the service of [Game Analytics](http://www.gameanalytics.com/) in your mod
+An API to use the service of [Game Analytics](http://www.gameanalytics.com/) in minecraft mods. (Although you could easily just delete the few Minecraft related parts and use it for any game.
 
 ## How to use -> *[Explanation Picture](http://i.imgur.com/viwbcPt.png)*
 1. If you do not already have one, create an account at [Game Analytics](http://www.gameanalytics.com/) and set everything up for your game (or rather mod) there.
