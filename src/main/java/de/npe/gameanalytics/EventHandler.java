@@ -142,7 +142,7 @@ final class EventHandler {
 			try (CloseableHttpClient httpClient = HttpClients.createDefault();
 					CloseableHttpResponse response = httpClient.execute(request)) {
 				String responseContent = readResponseContent(response);
-				System.out.println("Sent event of category \"" + category + "\", response: " + responseContent);
+				System.out.println("Sent GA event of category \"" + category + "\", response: " + responseContent);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

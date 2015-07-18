@@ -28,7 +28,7 @@ public abstract class GAEvent {
 	private final String build;
 
 	GAEvent(Analytics an) {
-		keyPair = an.keyPair;
+		keyPair = an.keyPair();
 		userID = an.getUserID();
 		sessionID = an.getSessionID();
 		build = an.build();

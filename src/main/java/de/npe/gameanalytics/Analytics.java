@@ -28,7 +28,7 @@ import de.npe.gameanalytics.events.GAEvent;
  *
  */
 public abstract class Analytics {
-	public abstract boolean active();
+	public abstract boolean isActive();
 
 	public abstract String gameKey();
 
@@ -117,13 +117,13 @@ public abstract class Analytics {
 	////////////////////////////
 
 	public final void event(GAEvent event) {
-		if (active()) {
+		if (isActive()) {
 			EventHandler.add(event);
 		}
 	}
 
 	public final void eventError(Severity severity, String message) {
-		if (active()) {
+		if (isActive()) {
 			switch (severity) {
 				case critical:
 				case error:
@@ -142,25 +142,25 @@ public abstract class Analytics {
 	}
 
 	public final void eventDesign(String eventID) {
-		if (active()) {
+		if (isActive()) {
 			EventHandler.add(new GADesignEvent(this, eventID, null, null));
 		}
 	}
 
 	public final void eventDesign(String eventID, String area) {
-		if (active()) {
+		if (isActive()) {
 			EventHandler.add(new GADesignEvent(this, eventID, area, null));
 		}
 	}
 
 	public final void eventDesign(String eventID, Number value) {
-		if (active()) {
+		if (isActive()) {
 			EventHandler.add(new GADesignEvent(this, eventID, null, value));
 		}
 	}
 
 	public final void eventDesign(String eventID, String area, Number value) {
-		if (active()) {
+		if (isActive()) {
 			EventHandler.add(new GADesignEvent(this, eventID, area, value));
 		}
 	}
@@ -169,7 +169,14 @@ public abstract class Analytics {
 	// internal stuff. you should not need to bother about this :) //
 	/////////////////////////////////////////////////////////////////
 
-	public final KeyPair keyPair = new KeyPair();
+	public final KeyPair keyPair() {
+		if (keyPair == null) {
+			keyPair = new KeyPair();
+		}
+		return keyPair;
+	}
+
+	private KeyPair keyPair;
 
 	public final class KeyPair {
 		public final String gameKey = gameKey();

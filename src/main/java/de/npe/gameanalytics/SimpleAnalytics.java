@@ -32,7 +32,7 @@ public class SimpleAnalytics extends Analytics {
 	}
 
 	@Override
-	public boolean active() {
+	public boolean isActive() {
 		return Minecraft.getMinecraft().isSnooperEnabled();
 	}
 

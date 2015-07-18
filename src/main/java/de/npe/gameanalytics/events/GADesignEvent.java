@@ -23,7 +23,9 @@ public class GADesignEvent extends GAEventWithID {
 	public GADesignEvent(Analytics an, String eventID, String area, Number value) {
 		super(an, eventID);
 		this.area = area;
-		this.value = Float.valueOf(value.floatValue());
+		if (value != null) {
+			this.value = Float.valueOf(value.floatValue());
+		}
 	}
 
 	@Override
