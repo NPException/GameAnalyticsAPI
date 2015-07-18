@@ -153,13 +153,13 @@ public abstract class Analytics {
 		}
 	}
 
-	public final void eventDesign(String eventID, Float value) {
+	public final void eventDesign(String eventID, Number value) {
 		if (active()) {
 			EventHandler.add(new GADesignEvent(this, eventID, null, value));
 		}
 	}
 
-	public final void eventDesign(String eventID, String area, Float value) {
+	public final void eventDesign(String eventID, String area, Number value) {
 		if (active()) {
 			EventHandler.add(new GADesignEvent(this, eventID, area, value));
 		}

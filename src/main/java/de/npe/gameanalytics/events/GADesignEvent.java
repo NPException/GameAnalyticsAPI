@@ -20,10 +20,10 @@ public class GADesignEvent extends GAEventWithID {
 	@SerializedName("value")
 	private Float value;
 
-	public GADesignEvent(Analytics an, String eventID, String area, Float value) {
+	public GADesignEvent(Analytics an, String eventID, String area, Number value) {
 		super(an, eventID);
 		this.area = area;
-		this.value = value;
+		this.value = Float.valueOf(value.floatValue());
 	}
 
 	@Override
