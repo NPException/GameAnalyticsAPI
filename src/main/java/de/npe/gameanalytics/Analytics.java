@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.UUID;
 
+import de.npe.gameanalytics.events.GABusinessEvent;
 import de.npe.gameanalytics.events.GADesignEvent;
 import de.npe.gameanalytics.events.GAErrorEvent;
 import de.npe.gameanalytics.events.GAErrorEvent.Severity;
@@ -162,6 +163,27 @@ public abstract class Analytics {
 	public final void eventDesign(String eventID, String area, Number value) {
 		if (isActive()) {
 			EventHandler.add(new GADesignEvent(this, eventID, area, value));
+		}
+	}
+
+	/**
+	 * Similar to {@link #eventDesign(String, String, Number)}.<br>
+	 * <br>
+	 * Currency must be one that is specifically accepted by GA. see <a href=
+	 * "http://support.gameanalytics.com/hc/en-us/articles/200841576-Supported-currencies"
+	 * >Supported currencies</a><br>
+	 * <br>
+	 * The amount is the given monetary unit (currency) times 100. So in case of
+	 * USD the amount would be given in cents, so to speak.
+	 *
+	 * @param an
+	 * @param eventID
+	 * @param amount
+	 * @param currency
+	 */
+	public final void eventBusiness(String eventID, String area, int amount, String currency) {
+		if (isActive()) {
+			EventHandler.sendEventImmediately(new GABusinessEvent(this, eventID, area, amount, currency));
 		}
 	}
 
