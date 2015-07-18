@@ -10,7 +10,17 @@ An API to easily use the service of [Game Analytics](http://www.gameanalytics.co
 ## Logging events
 First, I know that the method names sound kind of weird, but they follow a pattern: `event[GA_event_category]` So the method `analytics.eventDesign(..)` has not much to do with designing events, but creates an event of the "design" category on Game Analytics.
 
-`analytics.eventDesign(..)` is the method you will probably use most. It is used for all game design related events. So basically all events except for error messages and user infos.
+`analytics.eventDesign(..)` is the method you will probably use most. It is used for all game design related events. So basically all events except for error messages and user infos. This is an example for how you log an event:
+
+````java
+// logs that a player was killed by my fabulous mod sword
+analytics.eventDesign("ItemUse:MyFancySword:KilledPlayer");
+````
+
+The method `eventDesign` exists in variants of up to 3 paramets:
+- `eventID` *(mandatory)*: This field specifies the exact type of event. GameAnalytics treats colons (`:`) as separators, which is nice. A common practice is building the event ID like this: `[category]:[sub_category]:[outcome/action]` You can also have more sub categories if necessary.
+- `area`: This is to specify the region where the event happened. For example the dimension ("Nether") or a biome ("flatlands")
+- `value`: a value that might be necessary for your event. You could track how many times a player swung your fancy sword within a certain amount of time and send this event afterwards, for example.
 
 ## Where do I get my GA game key and secret key again?
 Navigate to the settings of your game on GA and there they are:
