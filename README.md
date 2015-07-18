@@ -8,7 +8,7 @@ An API to easily use the service of [Game Analytics](http://www.gameanalytics.co
 4. After that you can use the event methods of `analytics` to collect events. Depending on what you want to log, you should (as always in MC modding) keep an eye on `world.isRemote`. Only log events on a side where they belong.
 
 ## Logging events
-First, I know that the method names sound kind of weird, but they follow a pattern: `event[GA_event_category]` So the method `analytics.eventDesign(..)` has not much to do with designing events, but creates an event of the "design" category on Game Analytics.
+First, I know that the method names sound kind of weird, but they follow a pattern: `event[CATEGORY](..)` So the method `analytics.eventDesign(..)` has not much to do with designing events, but creates an event of the "design" category on Game Analytics.
 
 `analytics.eventDesign(..)` is the method you will probably use most. It is used for all game design related events. So basically all events except for error messages and user infos. This is an example for how you log an event:
 
