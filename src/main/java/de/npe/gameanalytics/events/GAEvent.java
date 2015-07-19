@@ -3,6 +3,7 @@
  */
 package de.npe.gameanalytics.events;
 
+import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
 import de.npe.gameanalytics.Analytics;
@@ -16,6 +17,8 @@ import de.npe.gameanalytics.Analytics.KeyPair;
  *
  */
 public abstract class GAEvent {
+	private static Gson GSON; // only initialized if necessary
+
 	public final transient KeyPair keyPair;
 
 	@SerializedName("user_id")
@@ -35,4 +38,24 @@ public abstract class GAEvent {
 	}
 
 	public abstract String category();
+
+	private transient String toString;
+
+	@Override
+	public String toString() {
+		if (toString == null) {
+			String tmp;
+			try {
+				if (GSON == null) {
+					GSON = new Gson();
+				}
+				tmp = GSON.toJson(this);
+			} catch (Exception ex) {
+				tmp = super.toString();
+			}
+			tmp = tmp + " + " + String.valueOf(keyPair);
+			toString = tmp;
+		}
+		return toString;
+	}
 }

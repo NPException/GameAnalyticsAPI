@@ -60,14 +60,19 @@ final class EventHandler {
 	}
 
 	static void add(GAEvent event) {
-		Map<String, List<GAEvent>> gameEvents = getEventsForGame(event.keyPair);
-		synchronized (gameEvents) {
-			List<GAEvent> categoryEvents = gameEvents.get(event.category());
-			if (categoryEvents == null) {
-				categoryEvents = new ArrayList<>(2);
-				gameEvents.put(event.category(), categoryEvents);
+		try {
+			Map<String, List<GAEvent>> gameEvents = getEventsForGame(event.keyPair);
+			synchronized (gameEvents) {
+				List<GAEvent> categoryEvents = gameEvents.get(event.category());
+				if (categoryEvents == null) {
+					categoryEvents = new ArrayList<>(2);
+					gameEvents.put(event.category(), categoryEvents);
+				}
+				categoryEvents.add(event);
 			}
-			categoryEvents.add(event);
+		} catch (Exception ex) {
+			System.err.println("Failed to add GAEvent to event queue: " + event);
+			ex.printStackTrace(System.err);
 		}
 		init();
 	}

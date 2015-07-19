@@ -220,5 +220,10 @@ public abstract class Analytics {
 			KeyPair other = (KeyPair) obj;
 			return gameKey.equals(other.gameKey) && secretKey.equals(other.secretKey);
 		}
+
+		@Override
+		public String toString() {
+			return "KeyPair: hasGameKey=" + (gameKey != null) + ", hasSecretKey=" + (secretKey != null);
+		}
 	}
 }
