@@ -7,12 +7,15 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.HttpResponse;
@@ -35,6 +38,10 @@ import de.npe.gameanalytics.events.GAEvent;
  */
 final class EventHandler {
 	private static boolean init = true;
+
+	private static final Queue<GAEvent> immediateEvents = new ArrayDeque<>(32);
+	private static Thread sendImmediateThread;
+	private static Semaphore sendSemaphore = new Semaphore(0);
 
 	/**
 	 * Map containing all not yet sent events.<br>
@@ -65,8 +72,16 @@ final class EventHandler {
 		init();
 	}
 
-	static void sendEventImmediately(GAEvent event) {
-		RESTHelper.sendSingleEvent(event);
+	static void queueImmediateSend(GAEvent event) {
+		synchronized (immediateEvents) {
+			boolean added = immediateEvents.offer(event);
+			if (added) {
+				sendSemaphore.release(); // increase free permits on semaphore by 1
+			} else {
+				System.err.println("Could not add event to immediate events queue: " + event);
+			}
+		}
+		init();
 	}
 
 	private static void init() {
@@ -96,6 +111,26 @@ final class EventHandler {
 		};
 		sendThread.setDaemon(true);
 		sendThread.start();
+
+		sendImmediateThread = new Thread("GA-DataSendImmediatelyThread") {
+			@Override
+			public void run() {
+				while (true) {
+					sendSemaphore.acquireUninterruptibly(); // try to aquire a permit. will only happen if something is in the queue
+					GAEvent event;
+					synchronized (immediateEvents) {
+						event = immediateEvents.poll();
+					}
+					if (event != null) {
+						RESTHelper.sendSingleEvent(event);
+					} else {
+						System.err.println("Immediate event queue did not contain an event. Something released a permit without adding an event first.");
+					}
+				}
+			}
+		};
+		sendImmediateThread.setDaemon(true);
+		sendImmediateThread.start();
 	}
 
 	private static synchronized void sendData() {
@@ -132,7 +167,7 @@ final class EventHandler {
 			try {
 				sendData(event.keyPair, event.category(), Arrays.asList(event));
 			} catch (Exception e) {
-				System.err.println("Tried to send single event, but failed.");
+				// System.err.println("Tried to send single event, but failed.");
 			}
 		}
 
@@ -141,10 +176,10 @@ final class EventHandler {
 
 			try (CloseableHttpClient httpClient = HttpClients.createDefault();
 					CloseableHttpResponse response = httpClient.execute(request)) {
-				String responseContent = readResponseContent(response);
-				System.out.println("Sent GA event of category \"" + category + "\", response: " + responseContent);
+				// String responseContent = readResponseContent(response);
+				// System.out.println("Sent GA event of category \"" + category + "\", response: " + responseContent);
 			} catch (Exception e) {
-				e.printStackTrace();
+				// e.printStackTrace();
 			}
 		}
 

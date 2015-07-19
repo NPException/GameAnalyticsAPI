@@ -117,9 +117,13 @@ public abstract class Analytics {
 	// Methods to send events //
 	////////////////////////////
 
-	public final void event(GAEvent event) {
+	public final void event(GAEvent event, boolean immediate) {
 		if (isActive()) {
-			EventHandler.add(event);
+			if (immediate) {
+				EventHandler.queueImmediateSend(event);
+			} else {
+				EventHandler.add(event);
+			}
 		}
 	}
 
@@ -128,7 +132,7 @@ public abstract class Analytics {
 			switch (severity) {
 				case critical:
 				case error:
-					EventHandler.sendEventImmediately(new GAErrorEvent(this, severity, message));
+					EventHandler.queueImmediateSend(new GAErrorEvent(this, severity, message));
 					break;
 				case warning:
 				case info:
@@ -183,7 +187,7 @@ public abstract class Analytics {
 	 */
 	public final void eventBusiness(String eventID, String area, int amount, String currency) {
 		if (isActive()) {
-			EventHandler.sendEventImmediately(new GABusinessEvent(this, eventID, area, amount, currency));
+			EventHandler.queueImmediateSend(new GABusinessEvent(this, eventID, area, amount, currency));
 		}
 	}
 
