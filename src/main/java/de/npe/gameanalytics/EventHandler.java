@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.HttpResponse;
@@ -43,6 +44,10 @@ final class EventHandler {
 	private static Thread sendImmediateThread;
 	private static Semaphore sendSemaphore = new Semaphore(0);
 
+	private static ReentrantLock getEventsForGame_lock = new ReentrantLock(true);
+	private static ReentrantLock getCategoryEvents_lock = new ReentrantLock(true);
+	private static ReentrantLock sendData_lock = new ReentrantLock(true);
+
 	/**
 	 * Map containing all not yet sent events.<br>
 	 * <br>
@@ -50,24 +55,39 @@ final class EventHandler {
 	 */
 	private static final Map<KeyPair, Map<String, List<GAEvent>>> events = new HashMap<>(8);
 
-	private static synchronized Map<String, List<GAEvent>> getEventsForGame(KeyPair keyPair) {
-		Map<String, List<GAEvent>> gameEvents = events.get(keyPair);
-		if (gameEvents == null) {
-			gameEvents = new HashMap<>();
-			events.put(keyPair, gameEvents);
+	private static Map<String, List<GAEvent>> getEventsForGame(KeyPair keyPair) {
+		try {
+			getEventsForGame_lock.lock();
+			Map<String, List<GAEvent>> gameEvents = events.get(keyPair);
+			if (gameEvents == null) {
+				gameEvents = new HashMap<>();
+				events.put(keyPair, gameEvents);
+			}
+			return gameEvents;
+		} finally {
+			getEventsForGame_lock.unlock();
 		}
-		return gameEvents;
+	}
+
+	private static List<GAEvent> getCategoryEvents(Map<String, List<GAEvent>> gameEvents, String category) {
+		try {
+			getCategoryEvents_lock.lock();
+			List<GAEvent> categoryEvents = gameEvents.get(category);
+			if (categoryEvents == null) {
+				categoryEvents = new ArrayList<>(2);
+				gameEvents.put(category, categoryEvents);
+			}
+			return categoryEvents;
+		} finally {
+			getCategoryEvents_lock.unlock();
+		}
 	}
 
 	static void add(GAEvent event) {
 		try {
 			Map<String, List<GAEvent>> gameEvents = getEventsForGame(event.keyPair);
-			synchronized (gameEvents) {
-				List<GAEvent> categoryEvents = gameEvents.get(event.category());
-				if (categoryEvents == null) {
-					categoryEvents = new ArrayList<>(2);
-					gameEvents.put(event.category(), categoryEvents);
-				}
+			List<GAEvent> categoryEvents = getCategoryEvents(gameEvents, event.category());
+			synchronized (categoryEvents) {
 				categoryEvents.add(event);
 			}
 		} catch (Exception ex) {
@@ -138,25 +158,35 @@ final class EventHandler {
 		sendImmediateThread.start();
 	}
 
-	private static synchronized void sendData() {
-		Set<KeyPair> keyPairs = events.keySet();
-		for (KeyPair keyPair : keyPairs) {
-			Map<String, List<GAEvent>> gameEvents = getEventsForGame(keyPair);
-			synchronized (gameEvents) {
+	private static void sendData() {
+		try {
+			sendData_lock.lock();
+			Set<KeyPair> keyPairs = events.keySet();
+			for (KeyPair keyPair : keyPairs) {
+				Map<String, List<GAEvent>> gameEvents = getEventsForGame(keyPair);
 				if (gameEvents.isEmpty()) {
 					continue;
 				}
+				List<String> categories = new ArrayList<>(gameEvents.keySet());
 
-				for (Map.Entry<String, List<GAEvent>> entry : gameEvents.entrySet()) {
-					List<GAEvent> categoryEvents = entry.getValue();
-					if (categoryEvents.isEmpty()) {
-						continue;
+				for (String category : categories) {
+					// category already exists so we don't need to use the synchronized method.
+					List<GAEvent> categoryEvents = gameEvents.get(category);
+					List<GAEvent> categoryEventsCopy;
+
+					synchronized (categoryEvents) {
+						if (categoryEvents.isEmpty()) {
+							continue;
+						}
+						categoryEventsCopy = new ArrayList<>(categoryEvents);
+						categoryEvents.clear();
 					}
 
-					RESTHelper.sendData(keyPair, entry.getKey(), categoryEvents);
-					categoryEvents.clear();
+					RESTHelper.sendData(keyPair, category, categoryEventsCopy);
 				}
 			}
+		} finally {
+			sendData_lock.unlock();
 		}
 	}
 
