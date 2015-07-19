@@ -17,7 +17,7 @@ First, I know that the method names sound kind of weird, but they follow a patte
 analytics.eventDesign("ItemUse:MyFancySword:KilledPlayer");
 ````
 
-The method `eventDesign` exists in variants of up to 3 paramets:
+The method `eventDesign` exists in variants of up to 3 parameters:
 - `eventID` *(mandatory)*: This field specifies the exact type of event. GameAnalytics treats colons (`:`) as separators, which is nice. A common practice is building the event ID like this: `[category]:[sub_category]:[outcome/action]` You can also have more sub categories if necessary.
 - `area`: This is to specify the region where the event happened. For example the dimension ("Nether") or a biome ("flatlands")
 - `value`: a value that might be necessary for your event. You could track how many times a player swung your fancy sword within a certain amount of time and send this event afterwards, for example.
