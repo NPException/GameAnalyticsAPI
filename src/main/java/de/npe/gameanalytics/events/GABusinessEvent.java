@@ -17,10 +17,10 @@ import de.npe.gameanalytics.Analytics;
 public class GABusinessEvent extends GADesignEvent {
 
 	@SerializedName("currency")
-	private String currency;
+	private final String currency;
 
 	@SerializedName("amount")
-	private int amount;
+	private final int amount;
 
 	/**
 	 * Currency must be one that is specifically accepted by GA. see <a href=

@@ -23,10 +23,10 @@ public class GAErrorEvent extends GAEvent {
 	}
 
 	@SerializedName("message")
-	private String message;
+	private final String message;
 
 	@SerializedName("severity")
-	private String severity;
+	private final String severity;
 
 	public GAErrorEvent(Analytics an, Severity severity, String message) {
 		super(an);

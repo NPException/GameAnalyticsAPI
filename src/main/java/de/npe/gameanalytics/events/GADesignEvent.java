@@ -15,17 +15,15 @@ import de.npe.gameanalytics.Analytics;
 public class GADesignEvent extends GAEventWithID {
 
 	@SerializedName("area")
-	private String area;
+	private final String area;
 
 	@SerializedName("value")
-	private Float value;
+	private final Float value;
 
 	public GADesignEvent(Analytics an, String eventID, String area, Number value) {
 		super(an, eventID);
 		this.area = area;
-		if (value != null) {
-			this.value = Float.valueOf(value.floatValue());
-		}
+		this.value = value == null ? null : Float.valueOf(value.floatValue());
 	}
 
 	@Override
