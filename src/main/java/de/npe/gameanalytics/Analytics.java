@@ -146,6 +146,32 @@ public abstract class Analytics {
 		}
 	}
 
+	/**
+	 * Sends an error asap, using a non-deamon thread.
+	 *
+	 * @param severity
+	 * @param message
+	 */
+	public final void eventErrorNow(Severity severity, String message) {
+		if (isActive()) {
+			EventHandler.sendErrorNow(new GAErrorEvent(this, severity, message), true);
+		}
+	}
+
+	/**
+	 * Sends an error NOW, without using a seperate thread.<br>
+	 * Beware that this can be quite expensive, so you should only use this when
+	 * your game is in an unrecoverable downward crash spiral anyway.
+	 *
+	 * @param severity
+	 * @param message
+	 */
+	protected final void eventErrorNOW(Severity severity, String message) {
+		if (isActive()) {
+			EventHandler.sendErrorNow(new GAErrorEvent(this, severity, message), false);
+		}
+	}
+
 	public final void eventDesign(String eventID) {
 		if (isActive()) {
 			EventHandler.add(new GADesignEvent(this, eventID, null, null));

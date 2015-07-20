@@ -29,6 +29,7 @@ import org.apache.http.impl.client.HttpClients;
 import com.google.gson.Gson;
 
 import de.npe.gameanalytics.Analytics.KeyPair;
+import de.npe.gameanalytics.events.GAErrorEvent;
 import de.npe.gameanalytics.events.GAEvent;
 import de.npe.gameanalytics.util.ACLock;
 
@@ -42,11 +43,13 @@ final class EventHandler {
 
 	private static final Queue<GAEvent> immediateEvents = new ArrayDeque<>(32);
 	private static Thread sendImmediateThread;
+	private static ACLock immediateEvents_lock = new ACLock(true);
 	private static Semaphore sendSemaphore = new Semaphore(0);
 
 	private static ACLock getEventsForGame_lock = new ACLock(true);
 	private static ACLock getCategoryEvents_lock = new ACLock(true);
 	private static ACLock sendData_lock = new ACLock(true);
+	private static ACLock errorSend_lock = new ACLock(true);
 
 	/**
 	 * Map containing all not yet sent events.<br>
@@ -70,7 +73,7 @@ final class EventHandler {
 		try (ACLock acl = getCategoryEvents_lock.lockAC()) {
 			List<GAEvent> categoryEvents = gameEvents.get(category);
 			if (categoryEvents == null) {
-				categoryEvents = new ArrayList<>(2);
+				categoryEvents = new ArrayList<>(16);
 				gameEvents.put(category, categoryEvents);
 			}
 			return categoryEvents;
@@ -92,15 +95,35 @@ final class EventHandler {
 	}
 
 	static void queueImmediateSend(GAEvent event) {
-		synchronized (immediateEvents) {
-			boolean added = immediateEvents.offer(event);
-			if (added) {
-				sendSemaphore.release(); // increase free permits on semaphore by 1
-			} else {
-				System.err.println("Could not add event to immediate events queue: " + event);
-			}
+		boolean added = false;
+		try (ACLock acl = immediateEvents_lock.lockAC()) {
+			added = immediateEvents.offer(event);
+		}
+
+		if (added) {
+			sendSemaphore.release(); // increase free permits on semaphore by 1
+		} else {
+			System.err.println("Could not add event to immediate events queue: " + event);
 		}
 		init();
+	}
+
+	static void sendErrorNow(final GAErrorEvent event, boolean useThread) {
+		if (useThread) {
+			Thread errorSendThread = new Thread("GA-send-error-now") {
+				@Override
+				public void run() {
+					try (ACLock acl = errorSend_lock.lockAC()) {
+						RESTHelper.sendSingleEvent(event);
+					}
+				}
+			};
+			errorSendThread.start();
+		} else {
+			try (ACLock acl = errorSend_lock.lockAC()) {
+				RESTHelper.sendSingleEvent(event);
+			}
+		}
 	}
 
 	private static void init() {
@@ -137,7 +160,7 @@ final class EventHandler {
 				while (true) {
 					sendSemaphore.acquireUninterruptibly(); // try to aquire a permit. will only happen if something is in the queue
 					GAEvent event;
-					synchronized (immediateEvents) {
+					try (ACLock acl = immediateEvents_lock.lockAC()) {
 						event = immediateEvents.poll();
 					}
 					if (event != null) {
