@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.HttpResponse;
@@ -31,6 +30,7 @@ import com.google.gson.Gson;
 
 import de.npe.gameanalytics.Analytics.KeyPair;
 import de.npe.gameanalytics.events.GAEvent;
+import de.npe.gameanalytics.util.ACLock;
 
 
 /**
@@ -44,9 +44,9 @@ final class EventHandler {
 	private static Thread sendImmediateThread;
 	private static Semaphore sendSemaphore = new Semaphore(0);
 
-	private static ReentrantLock getEventsForGame_lock = new ReentrantLock(true);
-	private static ReentrantLock getCategoryEvents_lock = new ReentrantLock(true);
-	private static ReentrantLock sendData_lock = new ReentrantLock(true);
+	private static ACLock getEventsForGame_lock = new ACLock(true);
+	private static ACLock getCategoryEvents_lock = new ACLock(true);
+	private static ACLock sendData_lock = new ACLock(true);
 
 	/**
 	 * Map containing all not yet sent events.<br>
@@ -56,30 +56,24 @@ final class EventHandler {
 	private static final Map<KeyPair, Map<String, List<GAEvent>>> events = new HashMap<>(8);
 
 	private static Map<String, List<GAEvent>> getEventsForGame(KeyPair keyPair) {
-		try {
-			getEventsForGame_lock.lock();
+		try (ACLock acl = getEventsForGame_lock.lockAC()) {
 			Map<String, List<GAEvent>> gameEvents = events.get(keyPair);
 			if (gameEvents == null) {
 				gameEvents = new HashMap<>();
 				events.put(keyPair, gameEvents);
 			}
 			return gameEvents;
-		} finally {
-			getEventsForGame_lock.unlock();
 		}
 	}
 
 	private static List<GAEvent> getCategoryEvents(Map<String, List<GAEvent>> gameEvents, String category) {
-		try {
-			getCategoryEvents_lock.lock();
+		try (ACLock acl = getCategoryEvents_lock.lockAC()) {
 			List<GAEvent> categoryEvents = gameEvents.get(category);
 			if (categoryEvents == null) {
 				categoryEvents = new ArrayList<>(2);
 				gameEvents.put(category, categoryEvents);
 			}
 			return categoryEvents;
-		} finally {
-			getCategoryEvents_lock.unlock();
 		}
 	}
 
@@ -159,8 +153,7 @@ final class EventHandler {
 	}
 
 	private static void sendData() {
-		try {
-			sendData_lock.lock();
+		try (ACLock acl = sendData_lock.lockAC()) {
 			Set<KeyPair> keyPairs = events.keySet();
 			for (KeyPair keyPair : keyPairs) {
 				Map<String, List<GAEvent>> gameEvents = getEventsForGame(keyPair);
@@ -185,8 +178,6 @@ final class EventHandler {
 					RESTHelper.sendData(keyPair, category, categoryEventsCopy);
 				}
 			}
-		} finally {
-			sendData_lock.unlock();
 		}
 	}
 
