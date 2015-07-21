@@ -109,7 +109,7 @@ public abstract class Analytics {
 		}
 	}
 
-	protected File getConfigFile() {
+	private File getConfigFile() {
 		return new File(getAnaylitcsConfigRootPath(), getClass().getCanonicalName() + ".properties");
 	}
 
