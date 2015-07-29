@@ -255,6 +255,10 @@ final class EventHandler {
 			return request;
 		}
 
+		/**
+		 * This method stays here for a while for testing purposes
+		 */
+		@SuppressWarnings("unused")
 		private static String readResponseContent(HttpResponse response) throws ClientProtocolException, IOException {
 			// Read the whole body
 			BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
