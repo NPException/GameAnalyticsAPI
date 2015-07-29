@@ -3,15 +3,12 @@
  */
 package de.npe.gameanalytics;
 
-import net.minecraft.client.Minecraft;
 
 /**
  * @author NPException
  *
  */
 public class SimpleAnalytics extends Analytics {
-
-	private boolean isClient;
 
 	private final String gameKey;
 	private final String secretKey;
@@ -23,17 +20,9 @@ public class SimpleAnalytics extends Analytics {
 		this.build = build;
 	}
 
-	public boolean isClient() {
-		return isClient;
-	}
-
-	public void markClientSide() {
-		isClient = true;
-	}
-
 	@Override
 	public boolean isActive() {
-		return Minecraft.getMinecraft().isSnooperEnabled();
+		return true;
 	}
 
 	@Override
@@ -53,6 +42,6 @@ public class SimpleAnalytics extends Analytics {
 
 	@Override
 	public String userPrefix() {
-		return isClient ? "user" : "server";
+		return "user";
 	}
 }
