@@ -216,18 +216,30 @@ final class EventHandler {
 		}
 
 		static void sendData(KeyPair keyPair, String category, List<GAEvent> events) {
-			String response = sendAndGetResponse(keyPair, category, events);
-			if (!"{\"status\":\"ok\"}".equals(response)) {
-				System.err.println("Failed to send analytics event data. Result of attempt: " + response);
+			String[] result = sendAndGetResponse(keyPair, category, events);
+			if (!"{\"status\":\"ok\"}".equals(result[0])) {
+				System.err.println("Failed to send analytics event data. Result of attempt: " + result[0] + " | Authentication hash used: " + result[1] + " | Data sent: " + result[2]);
 			}
 		}
 
-		private static String sendAndGetResponse(KeyPair keyPair, String category, List<GAEvent> events) {
+		/**
+		 * Sends the events to GA and returns a String array with the following
+		 * contents:<br>
+		 * <ul>
+		 * <li>Index 0: The response from GA, or exception message if one was
+		 * thrown.</li>
+		 * <li>Index 1: The authentication hash used to sent the data to GA, or
+		 * "null" if an exception was thrown.</li>
+		 * <li>Index 2: The json data that was sent to GA, or "null" if an
+		 * exception was thrown.</li>
+		 * </ul>
+		 */
+		private static String[] sendAndGetResponse(KeyPair keyPair, String category, List<GAEvent> events) {
 			try {
 				String postData = gson.toJson(events);
 				byte[] postBytes = postData.getBytes("UTF-8");
 
-				byte[] authData = (postData + keyPair.secretKey).getBytes();
+				byte[] authData = (postData + keyPair.secretKey).getBytes("UTF-8");
 				String hashedAuthData = DatatypeConverter.printHexBinary(MessageDigest.getInstance("MD5").digest(authData)).toLowerCase();
 
 				URL url = new URL(APIProps.GA_API_URL + APIProps.GA_API_VERSION + "/" + keyPair.gameKey + "/" + category);
@@ -255,9 +267,9 @@ final class EventHandler {
 					}
 				}
 
-				return responseSB.toString();
+				return new String[] { responseSB.toString(), hashedAuthData, postData };
 			} catch (Exception ex) {
-				return ex.getMessage();
+				return new String[] { ex.getMessage(), "null", "null" };
 			}
 		}
 	}
