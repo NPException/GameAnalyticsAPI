@@ -3,7 +3,7 @@
 # GameAnalyticsAPI
 An API to use the service of [Game Analytics](http://www.gameanalytics.com/) in minecraft mods. (Although you could easily just delete the few Minecraft related parts and use it for any game.)
 
-*Any questions that are not answered in this readme, or just want to chat? Come to [#gaapi on EsperNet](http://irc.lc/esper/gaapi)! :)*
+#### Questions? Jump on IRC to [#gaapi on EsperNet](http://irc.lc/esper/gaapi)! :)
 
 ## How to use -> *[Explanation Picture](http://i.imgur.com/nYsnc27.png)*
 1. If you do not already have one, create an account at [Game Analytics](http://www.gameanalytics.com/) and set everything up for your game (or rather mod) there.
