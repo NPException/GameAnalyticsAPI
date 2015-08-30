@@ -1,3 +1,5 @@
+*If you use this, I would be happy if you could notify me of that [on twitter](https://twitter.com/NPException) :)*
+
 # GameAnalyticsAPI
 An API to use the service of [Game Analytics](http://www.gameanalytics.com/) in minecraft mods. (Although you could easily just delete the few Minecraft related parts and use it for any game.)
 
