@@ -217,8 +217,11 @@ final class EventHandler {
 
 		static void sendData(KeyPair keyPair, String category, List<GAEvent> events) {
 			String[] result = sendAndGetResponse(keyPair, category, events);
-			if (!"{\"status\":\"ok\"}".equals(result[0])) {
-				System.err.println("Failed to send analytics event data. Result of attempt: " + result[0] + " | Authentication hash used: " + result[1] + " | Data sent: " + result[2]);
+			String status = result[0];
+			// While we expect JSON here, GA does not seem to care about the requested response
+			// type all the time. That's why we check for plaintext "ok" as well.
+			if (!"{\"status\":\"ok\"}".equals(status) && !"ok".equals(status)) {
+				System.err.println("Failed to send analytics event data. Result of attempt: " + status + " | Authentication hash used: " + result[1] + " | Data sent: " + result[2]);
 			}
 		}
 
