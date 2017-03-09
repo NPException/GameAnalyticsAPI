@@ -5,21 +5,17 @@ package de.npe.gameanalytics.events;
 
 import java.security.InvalidParameterException;
 
-import com.google.gson.annotations.SerializedName;
-
 import de.npe.gameanalytics.Analytics;
+import de.npe.gameanalytics.util.JSON;
 
 
 /**
  * @author NPException
- *
  */
 public class GABusinessEvent extends GADesignEvent {
 
-	@SerializedName("currency")
 	private final String currency;
 
-	@SerializedName("amount")
 	private final int amount;
 
 	/**
@@ -38,13 +34,21 @@ public class GABusinessEvent extends GADesignEvent {
 	public GABusinessEvent(Analytics an, String eventID, String area, int amount, String currency) {
 		super(an, eventID, area, null);
 		this.amount = amount;
-		if (currency == null || currency.isEmpty())
+		if (currency == null || currency.isEmpty()) {
 			throw new InvalidParameterException("currency must not be null or empty");
+		}
 		this.currency = currency;
 	}
 
 	@Override
 	public String category() {
 		return "business";
+	}
+
+	@Override
+	public void toJSON(StringBuilder sb) {
+		sb.append("\"currency\":\"").append(JSON.escape(currency)).append("\",");
+		sb.append("\"amount\":").append(amount).append(",");
+		super.toJSON(sb);
 	}
 }

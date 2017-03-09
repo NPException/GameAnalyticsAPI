@@ -3,9 +3,8 @@
  */
 package de.npe.gameanalytics.events;
 
-import com.google.gson.annotations.SerializedName;
-
 import de.npe.gameanalytics.Analytics;
+import de.npe.gameanalytics.util.JSON;
 
 
 /**
@@ -16,52 +15,36 @@ import de.npe.gameanalytics.Analytics;
  */
 public class GAUserEvent extends GAEvent {
 
-	@SerializedName("gender")
 	private String gender; // The gender of the user (M/F).
 
-	@SerializedName("birth_year")
 	private Integer birthYear; // The year the user was born.
 
-	@SerializedName("facebook_id")
 	private String facebookID; // The Facebook ID of the user, in clear.
 
-	@SerializedName("ios_id")
 	private String iosID; // The IDFA of the user, in clear.
 
-	@SerializedName("android_id")
 	private String androidID; // The Android ID of the user, in clear.
 
-	@SerializedName("adtruth_id")
 	private String adtruthID; // The AdTruth ID of the user, in clear.
 
-	@SerializedName("platform")
 	private String platform; // The platform that this user plays the game on.
 
-	@SerializedName("device")
 	private String device; // The device that this user plays the game on.
 
-	@SerializedName("os_major")
 	private String osMajor; // The major version of the OS that this user plays on.
 
-	@SerializedName("os_minor")
 	private String osMinor; // The minor version of the OS that this user plays on.
 
-	@SerializedName("install_publisher")
 	private String installPublisher; // The name of the ad publisher.
 
-	@SerializedName("install_site")
 	private String installSite; // The website or app where the ad for your game was shown.
 
-	@SerializedName("install_campaign")
 	private String installCampaign; // The name of your ad campaign this user comes from.
 
-	@SerializedName("install_adgroup")
 	private String installAdGroup; // The name of the ad group this user comes from.
 
-	@SerializedName("install_ad")
 	private String installAd; // The name of the ad this user comes from.
 
-	@SerializedName("install_keyword")
 	private String installKeyword; // A keyword to associate with this user and the campaign ad.
 
 	public GAUserEvent(Analytics an) {
@@ -156,5 +139,58 @@ public class GAUserEvent extends GAEvent {
 	@Override
 	public String category() {
 		return "user";
+	}
+
+	@Override
+	public void toJSON(StringBuilder sb) {
+		if (gender != null) {
+			sb.append("\"gender\":\"").append(JSON.escape(gender)).append("\",");
+		}
+		if (birthYear != null) {
+			sb.append("\"birth_year\":").append(birthYear.intValue()).append(",");
+		}
+		if (facebookID != null) {
+			sb.append("\"facebook_id\":\"").append(JSON.escape(facebookID)).append("\",");
+		}
+		if (iosID != null) {
+			sb.append("\"ios_id\":\"").append(JSON.escape(iosID)).append("\",");
+		}
+		if (androidID != null) {
+			sb.append("\"android_id\":\"").append(JSON.escape(androidID)).append("\",");
+		}
+		if (adtruthID != null) {
+			sb.append("\"adtruth_id\":\"").append(JSON.escape(adtruthID)).append("\",");
+		}
+		if (platform != null) {
+			sb.append("\"platform\":\"").append(JSON.escape(platform)).append("\",");
+		}
+		if (device != null) {
+			sb.append("\"device\":\"").append(JSON.escape(device)).append("\",");
+		}
+		if (osMajor != null) {
+			sb.append("\"os_major\":\"").append(JSON.escape(osMajor)).append("\",");
+		}
+		if (osMinor != null) {
+			sb.append("\"os_minor\":\"").append(JSON.escape(osMinor)).append("\",");
+		}
+		if (installPublisher != null) {
+			sb.append("\"install_publisher\":\"").append(JSON.escape(installPublisher)).append("\",");
+		}
+		if (installSite != null) {
+			sb.append("\"install_site\":\"").append(JSON.escape(installSite)).append("\",");
+		}
+		if (installCampaign != null) {
+			sb.append("\"install_campaign\":\"").append(JSON.escape(installCampaign)).append("\",");
+		}
+		if (installAdGroup != null) {
+			sb.append("\"install_adgroup\":\"").append(JSON.escape(installAdGroup)).append("\",");
+		}
+		if (installAd != null) {
+			sb.append("\"install_ad\":\"").append(JSON.escape(installAd)).append("\",");
+		}
+		if (installKeyword != null) {
+			sb.append("\"install_keyword\":\"").append(JSON.escape(installKeyword)).append("\",");
+		}
+		super.toJSON(sb);
 	}
 }

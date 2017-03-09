@@ -26,7 +26,6 @@ import de.npe.gameanalytics.events.GAEvent;
  * <b>package-info.java</b>.
  *
  * @author NPException
- *
  */
 public abstract class Analytics {
 	public abstract boolean isActive();
@@ -77,7 +76,7 @@ public abstract class Analytics {
 		return sessionID;
 	}
 
-	protected String getAnaylitcsConfigRootPath() {
+	protected String getAnalyticsConfigRootPath() {
 		return ".analytics";
 	}
 
@@ -114,7 +113,7 @@ public abstract class Analytics {
 	}
 
 	private File getConfigFile() {
-		return new File(getAnaylitcsConfigRootPath(), getConfigFileName() + ".properties");
+		return new File(getAnalyticsConfigRootPath(), getConfigFileName() + ".properties");
 	}
 
 	////////////////////////////
@@ -210,8 +209,8 @@ public abstract class Analytics {
 	 * The amount is the given monetary unit (currency) times 100. So in case of
 	 * USD the amount would be given in cents, so to speak.
 	 *
-	 * @param an
 	 * @param eventID
+	 * @param area
 	 * @param amount
 	 * @param currency
 	 */

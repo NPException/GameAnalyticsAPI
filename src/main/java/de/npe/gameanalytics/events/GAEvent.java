@@ -3,31 +3,24 @@
  */
 package de.npe.gameanalytics.events;
 
-import com.google.gson.Gson;
-import com.google.gson.annotations.SerializedName;
 
 import de.npe.gameanalytics.Analytics;
 import de.npe.gameanalytics.Analytics.KeyPair;
+import de.npe.gameanalytics.util.JSON;
 
 
 /**
  * Base event class. Contains values that are mandatory for all event types.
  *
  * @author NPException
- *
  */
-public abstract class GAEvent {
-	private static Gson GSON; // only initialized if necessary
-
+public abstract class GAEvent implements JSON.JSONObject {
 	public final transient KeyPair keyPair;
 
-	@SerializedName("user_id")
 	private final String userID;
 
-	@SerializedName("session_id")
 	private final String sessionID;
 
-	@SerializedName("build")
 	private final String build;
 
 	GAEvent(Analytics an) {
@@ -39,22 +32,24 @@ public abstract class GAEvent {
 
 	public abstract String category();
 
+	@Override
+	public void toJSON(StringBuilder sb) {
+		sb.append("\"user_id\":\"").append(JSON.escape(userID)).append("\",");
+		sb.append("\"session_id\":\"").append(JSON.escape(sessionID)).append("\",");
+		sb.append("\"build\":\"").append(JSON.escape(build)).append("\"");
+	}
+
 	private transient String toString;
 
 	@Override
 	public String toString() {
 		if (toString == null) {
-			String tmp;
-			try {
-				if (GSON == null) {
-					GSON = new Gson();
-				}
-				tmp = GSON.toJson(this);
-			} catch (Exception ex) {
-				tmp = super.toString();
-			}
-			tmp = tmp + " + " + String.valueOf(keyPair);
-			toString = tmp;
+			StringBuilder sb = new StringBuilder();
+			sb.append('{');
+			toJSON(sb);
+			sb.append('}');
+			sb.append(" + ").append(keyPair);
+			toString = sb.toString();
 		}
 		return toString;
 	}

@@ -21,8 +21,6 @@ import java.util.concurrent.Semaphore;
 
 import javax.xml.bind.DatatypeConverter;
 
-import com.google.gson.Gson;
-
 import de.npe.gameanalytics.Analytics.KeyPair;
 import de.npe.gameanalytics.events.GAErrorEvent;
 import de.npe.gameanalytics.events.GAEvent;
@@ -45,6 +43,11 @@ final class EventHandler {
 	private static ACLock getCategoryEvents_lock = new ACLock(true);
 	private static ACLock sendData_lock = new ACLock(true);
 	private static ACLock errorSend_lock = new ACLock(true);
+
+	// time in seconds for which event sending will be blocked if sending fails
+	private static long suspensionTimeSeconds = 0;
+	// timestamp that determines when event sending may be resumed
+	private static long suspendedUntil = System.currentTimeMillis();
 
 	/**
 	 * Map containing all not yet sent events.<br>
@@ -109,25 +112,27 @@ final class EventHandler {
 				@Override
 				public void run() {
 					try (ACLock acl = errorSend_lock.lockAC()) {
-						RESTHelper.sendSingleEvent(event);
+						RESTHelper.sendSingleEvent(event, true);
 					}
 				}
 			};
 			errorSendThread.start();
 		} else {
 			try (ACLock acl = errorSend_lock.lockAC()) {
-				RESTHelper.sendSingleEvent(event);
+				RESTHelper.sendSingleEvent(event, true);
 			}
 		}
 	}
 
 	private static void init() {
-		if (!init)
+		if (!init) {
 			return;
+		}
 
 		synchronized (EventHandler.class) {
-			if (!init)
+			if (!init) {
 				return;
+			}
 			init = false;
 		}
 
@@ -159,7 +164,7 @@ final class EventHandler {
 						event = immediateEvents.poll();
 					}
 					if (event != null) {
-						RESTHelper.sendSingleEvent(event);
+						RESTHelper.sendSingleEvent(event, true);
 					} else {
 						System.err.println("Immediate event queue did not contain an event. Something released a permit without adding an event first.");
 					}
@@ -193,35 +198,47 @@ final class EventHandler {
 						categoryEvents.clear();
 					}
 
-					RESTHelper.sendData(keyPair, category, categoryEventsCopy);
+					RESTHelper.sendData(keyPair, category, categoryEventsCopy, false);
 				}
 			}
 		}
 	}
 
 	private static class RESTHelper {
-		private RESTHelper() {}
-
-		private static final Gson gson = new Gson();
+		private RESTHelper() {
+		}
 
 		private static final String contentType = "application/json; charset=utf-8";
 		private static final String accept = "application/json";
 
-		static void sendSingleEvent(GAEvent event) {
+		static void sendSingleEvent(GAEvent event, boolean ignoreSuspension) {
 			try {
-				sendData(event.keyPair, event.category(), Arrays.asList(event));
+				sendData(event.keyPair, event.category(), Arrays.asList(event), ignoreSuspension);
 			} catch (Exception e) {
 				// System.err.println("Tried to send single event, but failed.");
 			}
 		}
 
-		static void sendData(KeyPair keyPair, String category, List<GAEvent> events) {
+		static void sendData(KeyPair keyPair, String category, List<GAEvent> events, boolean ignoreSuspension) {
+			if (!ignoreSuspension && suspendedUntil > System.currentTimeMillis()) {
+				return;
+			}
+
 			String[] result = sendAndGetResponse(keyPair, category, events);
 			String status = result[0];
 			// While we expect JSON here, GA does not seem to care about the requested response
 			// type all the time. That's why we check for plaintext "ok" as well.
-			if (!"{\"status\":\"ok\"}".equals(status) && !"ok".equals(status)) {
+			if ("{\"status\":\"ok\"}".equals(status) || "ok".equals(status)) {
+				suspensionTimeSeconds = 0;
+			} else {
+				// failed to send. suspend event sending for 30 seconds first,
+				// and double the suspension time if sending still fails after the suspension
+				suspensionTimeSeconds = suspensionTimeSeconds == 0 ? 30 // 30 seconds min
+						: Math.min(suspensionTimeSeconds * 2, 32 * 60); // 32 minutes max
+				suspendedUntil = System.currentTimeMillis() + suspensionTimeSeconds * 1000L;
+
 				System.err.println("Failed to send analytics event data. Result of attempt: " + status + " | Authentication hash used: " + result[1] + " | Data sent: " + result[2]);
+				System.err.println("Sending of analytics data will be suspended for the next " + suspensionTimeSeconds + " seconds");
 			}
 		}
 
@@ -239,7 +256,21 @@ final class EventHandler {
 		 */
 		private static String[] sendAndGetResponse(KeyPair keyPair, String category, List<GAEvent> events) {
 			try {
-				String postData = gson.toJson(events);
+				StringBuilder postDataBuilder = new StringBuilder(events.size() * 200);
+				postDataBuilder.append('[');
+				int length = events.size();
+				for (int i = 0; i < length; i++) {
+					if (i > 0) {
+						postDataBuilder.append(',');
+					}
+					postDataBuilder.append('{');
+					events.get(i).toJSON(postDataBuilder);
+					postDataBuilder.append('}');
+				}
+				postDataBuilder.append(']');
+
+				String postData = postDataBuilder.toString();
+
 				byte[] postBytes = postData.getBytes("UTF-8");
 
 				byte[] authData = (postData + keyPair.secretKey).getBytes("UTF-8");

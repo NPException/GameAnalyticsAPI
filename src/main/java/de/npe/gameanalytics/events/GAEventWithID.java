@@ -5,9 +5,8 @@ package de.npe.gameanalytics.events;
 
 import java.security.InvalidParameterException;
 
-import com.google.gson.annotations.SerializedName;
-
 import de.npe.gameanalytics.Analytics;
+import de.npe.gameanalytics.util.JSON;
 
 
 /**
@@ -15,19 +14,24 @@ import de.npe.gameanalytics.Analytics;
  * events)
  *
  * @author NPException
- *
  */
 abstract class GAEventWithID extends GAEvent {
 
-	@SerializedName("event_id")
 	private final String eventID;
 
 	GAEventWithID(Analytics an, String eventID) {
 		super(an);
 
-		if (eventID == null || eventID.isEmpty())
+		if (eventID == null || eventID.isEmpty()) {
 			throw new InvalidParameterException("eventID must not be null or empty");
+		}
 
 		this.eventID = eventID;
+	}
+
+	@Override
+	public void toJSON(StringBuilder sb) {
+		sb.append("\"event_id\":\"").append(JSON.escape(eventID)).append("\",");
+		super.toJSON(sb);
 	}
 }

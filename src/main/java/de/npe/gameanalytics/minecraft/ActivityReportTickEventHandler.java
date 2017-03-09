@@ -80,7 +80,7 @@ public final class ActivityReportTickEventHandler {
 									ae.installPublisher(System.getProperty("java.runtime.version"));
 									ae.installKeyword(analytics.isClient ? "client" : "server");
 								} catch (Exception e) {
-									System.err.println("Couldnot get all system properties: " + e);
+									System.err.println("Could not get all system properties: " + e);
 								}
 								activityGAEvent = ae;
 							}

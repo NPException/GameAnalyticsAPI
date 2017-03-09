@@ -3,14 +3,12 @@
  */
 package de.npe.gameanalytics.events;
 
-import com.google.gson.annotations.SerializedName;
-
 import de.npe.gameanalytics.Analytics;
+import de.npe.gameanalytics.util.JSON;
 
 
 /**
  * @author NPException
- *
  */
 public class GAErrorEvent extends GAEvent {
 
@@ -22,10 +20,8 @@ public class GAErrorEvent extends GAEvent {
 		debug
 	}
 
-	@SerializedName("message")
 	private final String message;
 
-	@SerializedName("severity")
 	private final String severity;
 
 	public GAErrorEvent(Analytics an, Severity severity, String message) {
@@ -37,5 +33,12 @@ public class GAErrorEvent extends GAEvent {
 	@Override
 	public String category() {
 		return "error";
+	}
+
+	@Override
+	public void toJSON(StringBuilder sb) {
+		sb.append("\"message\":\"").append(JSON.escape(message)).append("\",");
+		sb.append("\"severity\":\"").append(JSON.escape(severity)).append("\",");
+		super.toJSON(sb);
 	}
 }
